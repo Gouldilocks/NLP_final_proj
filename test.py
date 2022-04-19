@@ -82,18 +82,21 @@ class test:
 
         for sentence in combined_list:
             sen = en_nlp(sentence)
-            isActive = True
-            for child in sen:
-                if child.dep_ == "auxpass":
-                    isActive = False
+            isActive = self.isActive(sen)
             if sentence in self.active_sentences and isActive:
                 active_correct+=1
-                print("ACTIVE")
                 print(sentence)
+                self.print_pos(sen)
+                # print("ACTIVE")
+                # print(sentence)
             if sentence in self.passive_sentences and not isActive:
                 passive_correct+=1
-                print("PASSIVE")
+                # print("PASSIVE")
+                # print(sentence)
+            elif sentence in self.passive_sentences and isActive:
+                print("Incorrect passive")
                 print(sentence)
+                self.print_pos(sen)
         print(active_correct/ len(self.active_sentences))
         print(passive_correct/len(self.passive_sentences))
 
@@ -113,3 +116,11 @@ class test:
         # print all atttributes in tabular format
         for token in sen:
             print(f"{token.text:{8}} {token.dep_ + ' =>':{10}}   {token.head.text:{9}}  {spacy.explain(token.dep_)} ")
+
+    def isActive(self, sen):
+        isActive = True
+        for child in sen:
+            if child.dep_ == "auxpass":
+                isActive = False
+
+        return isActive
