@@ -100,7 +100,89 @@ class test:
         print(active_correct/ len(self.active_sentences))
         print(passive_correct/len(self.passive_sentences))
 
+    def test_change_voice(self):
+        for sentence in self.active_sentences:
+            changed = self.change_voice(sentence)
+            print(sentence)
+            print(changed)
+            print()
+    def change_voice(self,sentence):
+        en_nlp = spacy.load('en_core_web_sm')
+        sen = en_nlp(sentence)
+        if self.isActive(sen):
+            # print("this is a active sentence")
+            self.print_pos(sen)
+            self.print_tree(sen)
+            sentences = list(sen.sents)
+            sentence = sentences[0]
+            # we assume only 1 sentence
+            root_node = sentence.root
+            tree = self.to_nltk_tree(root_node)
+            ans = []
+            verb = root_node.text
+            subject = ""
+            do = ""
+            # direct object
 
+            for token in sen:
+                if token.dep_ == "nsubj":
+                    subject = token.text
+                if token.dep_ == "dobj":
+                    do = token.text
+            if do =="":
+                print("This sentence cannot be converted to passive ")
+                print("missing direct object")
+                return""
+
+            for child in tree:
+                if isinstance(child, Tree):
+                    # print(child)
+                    pos = []
+                    self.traverse_tree(child, pos)
+                    pos.append(child.label())
+                    ans.append(pos)
+                else:
+                    if child.isalpha():
+                        pos = [child]
+                        ans.append(pos)
+            # group all level 1 subtree together
+            subject_phrase = ""
+            do_phrase = ""
+            io_phrase =""
+            for ls in ans:
+                if subject in ls:
+                    subject_phrase = " ".join(ls)
+                elif do in ls:
+                    do_phrase = " ".join(ls)
+                else:
+                    io_phrase = " ".join(ls)
+
+
+            if io_phrase !="":
+                result = do_phrase+ " is "+ verb +" by " +subject_phrase + " to " + io_phrase
+            else:
+                result = do_phrase+ " is "+ verb +" by " +subject_phrase
+            # print(result)
+            return result
+        else:
+            self.print_pos(sen)
+            self.print_tree(sen)
+            print("this is a passive sentence")
+            return ""
+
+    def traverse_tree(self, tree, pos):
+        for subtree in tree:
+            if type(subtree) == nltk.tree.Tree:
+                self.traverse_tree(subtree, pos)
+                pos.append(subtree.label())
+            else:
+                pos.append(subtree)
+        return
+    def to_nltk_tree(self, node):
+        if node.n_lefts + node.n_rights > 0:
+            return Tree(node.orth_, [self.to_nltk_tree(child) for child in node.children])
+        else:
+            return node.orth_
 
     def print_tree(self, sen):
         # print the tree in preety print
