@@ -72,7 +72,9 @@ class test:
             'the hair was groomed',
             'the computer was hacked',
         ]
+        # {Word : POS}
         self.pos_dict = {}  # This assumes that there is only one instance of each word
+        # {Word : Parent}
         self.parent_dict = {} # also assumes the same
 
     def test_ap(self):

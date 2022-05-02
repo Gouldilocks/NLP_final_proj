@@ -6,6 +6,6 @@ t = test()
 # sentence ="I am great"
 # multple do, io, sb?
 
-sentence = "A song is sung for us by a singer."
+sentence = "The gifts and fruit are given by John and Johan."
 print(t.change_voice(sentence))
 # t.test_change_voice()
