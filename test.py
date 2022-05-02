@@ -72,6 +72,8 @@ class test:
             'the hair was groomed',
             'the computer was hacked',
         ]
+        self.pos_dict = {}  # This assumes that there is only one instance of each word
+        self.parent_dict = {} # also assumes the same
 
     def test_ap(self):
         combined_list = self.active_sentences + self.passive_sentences
@@ -106,11 +108,19 @@ class test:
             print(sentence)
             print(changed)
             print()
+
+    def create_pos_and_parent_dicts(self, sen):
+        for token in sen:
+            self.pos_dict[token.text] = token.dep_
+            self.parent_dict[token.text] = token.head.text
+
     def change_voice(self,sentence):
         en_nlp = spacy.load('en_core_web_sm')
         sen = en_nlp(sentence)
+        self.create_pos_and_parent_dicts(sen)
         if self.isActive(sen):
             # print("this is a active sentence")
+            self.find_indirect_object_active()
             self.print_pos(sen)
             self.print_tree(sen)
             sentences = list(sen.sents)
@@ -164,9 +174,16 @@ class test:
                 result = do_phrase+ " is "+ verb +" by " +subject_phrase
             # print(result)
             return result
+
+        # If it is a passive sentence
         else:
             self.print_pos(sen)
             self.print_tree(sen)
+            io = self.find_indirect_object_word_phrases()
+            # if word phrases doesn't work
+            if io == -1:
+                io = self.find_indirect_object_passive_no_word_phrases()
+
             print("this is a passive sentence")
             return ""
 
@@ -206,3 +223,37 @@ class test:
                 isActive = False
 
         return isActive
+
+    def find_indirect_object_word_phrases(self):
+        for key, value in self.pos_dict.items():
+            # find the parent's part of speech and make sure it isn't an agent
+            if self.parent_dict[key] == "to" or self.parent_dict[key] == "for":
+                if self.pos_dict[self.parent_dict[key]] != "agent":
+                    if value == "pobj":
+                        print("Indirect object found: ", key)
+                        return key
+        return -1
+
+    # if this function is called, the "direct object" is the io.
+    def find_indirect_object_passive_no_word_phrases(self):
+        # make sure there is an agent in the sentence DONT THINK WE NEED THIS
+        # found = False 
+        # for key, value in self.pos_dict.items():
+        #     if self.pos_dict[self.parent_dict[key]] == "agent":
+        #         found = True 
+        # if not found:
+        #     print("No agent found")
+        #     return -1
+
+        for key, value in self.pos_dict.items():
+            if self.pos_dict[key] == "nsubjpass":
+                print("Indirect object found: ", key)
+                return key
+        return -1
+
+    def find_indirect_object_active(self):
+        for key, value in self.pos_dict.items():
+            if self.pos_dict[key] == "dative":
+                print("Indirect object found: ", key)
+                return key
+        return -1
