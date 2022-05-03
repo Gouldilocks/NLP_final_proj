@@ -120,16 +120,16 @@ class test:
         en_nlp = spacy.load('en_core_web_sm')
         sen = en_nlp(sentence)
         self.create_pos_and_parent_dicts(sen)
+        sentences = list(sen.sents)
+        sentence = sentences[0]
+        # we assume only 1 sentence
+        root_node = sentence.root
+        self.tree = self.to_nltk_tree(root_node)
         if self.isActive(sen):
             # print("this is a active sentence")
             self.find_indirect_object_active()
             self.print_pos(sen)
             self.print_tree(sen)
-            sentences = list(sen.sents)
-            sentence = sentences[0]
-            # we assume only 1 sentence
-            root_node = sentence.root
-            tree = self.to_nltk_tree(root_node)
             ans = []
             verb = root_node.text
             subject = ""
@@ -146,7 +146,7 @@ class test:
                 print("missing direct object")
                 return""
 
-            for child in tree:
+            for child in self.tree:
                 if isinstance(child, Tree):
                     # print(child)
                     pos = []
@@ -181,6 +181,10 @@ class test:
         else:
             self.print_pos(sen)
             self.print_tree(sen)
+            print("phrases:")
+            print("===============")
+            self.get_phrases()
+            print("-----")
             io = self.find_indirect_object_word_phrases()
             # if word phrases doesn't work
             if io == -1:
@@ -259,3 +263,36 @@ class test:
                 print("Indirect object found: ", key)
                 return key
         return -1
+
+    def get_prep(self, word):
+        for key, value in self.pos_dict.items():
+            if value != "ROOT" and self.pos_dict[self.parent_dict[word]] == "prep" or self.pos_dict[self.parent_dict[word]] == "agent":
+                return self.parent_dict[word]
+
+    def traverse_tree_dict(self, parent, attributes):
+        for child in parent:
+            if isinstance(child, Tree):
+                self.traverse_tree_dict(child, attributes)
+            else:
+                # if self.pos_dict[child] == "amod":
+                if parent.label() in attributes:
+                    attributes[parent.label()].append(child)
+                else:
+                    attributes[parent.label()] = [child]
+
+    def get_phrases(self):
+        attributes = {}
+        for child in self.tree:
+            if isinstance(child, Tree):
+                self.traverse_tree_dict(child, attributes)
+            elif child.isalpha():
+                attributes[child] = []
+
+        for key, value in attributes.items():
+            if len(value) > 0:
+                prep = self.get_prep(key)
+                if prep:
+                    print("phrase: ", self.get_prep(key), " " ,value, " ", key)
+                else:
+                    print("phrase: ", value, " ", key)
+
