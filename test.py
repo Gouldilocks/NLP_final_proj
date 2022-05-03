@@ -76,7 +76,8 @@ class test:
         self.pos_dict = {}  # This assumes that there is only one instance of each word
         # {Word : Parent}
         self.parent_dict = {} # also assumes the same
-
+        self.phrases = []
+    
     def test_ap(self):
         combined_list = self.active_sentences + self.passive_sentences
         random.shuffle(combined_list)
@@ -125,6 +126,10 @@ class test:
         # we assume only 1 sentence
         root_node = sentence.root
         self.tree = self.to_nltk_tree(root_node)
+        print("phrases:")
+        print("===============")
+        self.get_phrases()
+
         if self.isActive(sen):
             # print("this is a active sentence")
             self.find_indirect_object_active()
@@ -181,10 +186,6 @@ class test:
         else:
             self.print_pos(sen)
             self.print_tree(sen)
-            print("phrases:")
-            print("===============")
-            self.get_phrases()
-            print("-----")
             io = self.find_indirect_object_word_phrases()
             # if word phrases doesn't work
             if io == -1:
@@ -292,7 +293,13 @@ class test:
             if len(value) > 0:
                 prep = self.get_prep(key)
                 if prep:
-                    print("phrase: ", self.get_prep(key), " " ,value, " ", key)
+                    self.phrases.append([prep])
+                    self.phrases[-1].extend(value)
+                    self.phrases[-1].extend([key])
                 else:
-                    print("phrase: ", value, " ", key)
+                    self.phrases.append(value)
+                    self.phrases[-1].extend([key])
+
+        for child in self.phrases:
+            print(child)
 
