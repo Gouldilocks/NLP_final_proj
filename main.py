@@ -8,4 +8,3 @@ t = test()
 sentence = "Smart John and stupid Johan use their feet to kick the ball to Mary."
 # sentence = "Henry or his brother will be there."
 t.change_voice(sentence)
-# t.test_change_voice()
