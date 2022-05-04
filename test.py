@@ -77,6 +77,7 @@ class test:
         # {Word : Parent}
         self.parent_dict = {} # also assumes the same
         self.phrases = []
+        self.tree = None
     
     def test_ap(self):
         combined_list = self.active_sentences + self.passive_sentences
@@ -122,9 +123,9 @@ class test:
         sen = en_nlp(sentence)
         self.create_pos_and_parent_dicts(sen)
         sentences = list(sen.sents)
-        sentence = sentences[0]
+        sentence1 = sentences[0]
         # we assume only 1 sentence
-        root_node = sentence.root
+        root_node = sentence1.root
         self.tree = self.to_nltk_tree(root_node)
         print("phrases:")
         print("===============")
@@ -136,54 +137,37 @@ class test:
             self.find_indirect_object_active()
             self.print_pos(sen)
             self.print_tree(sen)
-            ans = []
-            verb = root_node.text
-            subject = ""
-            do = ""
-            # direct object
 
+            verb = root_node.text
+            do = []
+            # direct object
             for token in sen:
-                if token.dep_ == "nsubj":
-                    subject = token.text
                 if token.dep_ == "dobj":
-                    do = token.text
-            if do =="":
+                    do.append(token.text)
+            if len(do)==0:
                 print("This sentence cannot be converted to passive ")
                 print("missing direct object")
                 return""
+            do_phrase = []
+            idx = sentence.index(verb)
+            subject = sentence[:idx]
+            child_list = [self.tree]
+            while len(child_list)!=0:
+                node = child_list.pop()
+                for child in node:
+                    if isinstance(child, Tree):
+                        for d in do:
+                            if child.label() == d:
+                                pos = []
+                                self.traverse_tree(child, pos)
+                                pos.append(child.label())
+                                do_phrase.append(pos)
 
-            for child in self.tree:
-                if isinstance(child, Tree):
-                    # print(child)
-                    pos = []
-                    self.traverse_tree(child, pos)
-                    pos.append(child.label())
-                    ans.append(pos)
-                else:
-                    if child.isalpha():
-                        pos = [child]
-                        ans.append(pos)
-            # group all level 1 subtree together
-            subject_phrase = ""
-            do_phrase = ""
-            io_phrase =""
-            for ls in ans:
-                if subject in ls:
-                    subject_phrase = " ".join(ls)
-                elif do in ls:
-                    do_phrase = " ".join(ls)
-                else:
-                    io_phrase = " ".join(ls)
+                        child_list.append(child)
+            print(subject)
+            print(do_phrase)
 
-
-            if io_phrase !="":
-                result = do_phrase+ " is "+ verb +" by " +subject_phrase + " to " + io_phrase
-            else:
-                result = do_phrase+ " is "+ verb +" by " +subject_phrase
-            # print(result)
-            return result
-
-        # If it is a passive sentence
+            return
         else:
             self.print_pos(sen)
             self.print_tree(sen)
@@ -194,6 +178,18 @@ class test:
 
             print("this is a passive sentence")
             return ""
+    def get_subtrees(self,tree,pos):
+        print(tree)
+        for subtree in tree:
+            if type(subtree) == nltk.tree.Tree:
+                pos.append(subtree)
+                print("HERE")
+                print(subtree)
+                self.get_subtrees(subtree, pos)
+            else:
+                print("HER2")
+                return
+        return
 
     def traverse_tree(self, tree, pos):
         for subtree in tree:
@@ -201,6 +197,17 @@ class test:
                 self.traverse_tree(subtree, pos)
                 pos.append(subtree.label())
             else:
+                pos.append(subtree)
+        return
+
+    def traverse_tree_word(self,tree,pos, word):
+        for subtree in tree:
+            if type(subtree) == nltk.tree.Tree and subtree.label == word:
+                self.traverse_tree(subtree, pos)
+                pos.append(subtree.label())
+            elif type(subtree) == nltk.tree.Tree:
+                self.traverse_tree(subtree, pos)
+            elif isinstance(subtree, str):
                 pos.append(subtree)
         return
     def to_nltk_tree(self, node):
