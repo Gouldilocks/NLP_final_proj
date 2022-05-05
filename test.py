@@ -139,6 +139,7 @@ class test:
         self.tree = self.to_nltk_tree(root_node)
         print("phrases:")
         print("===============")
+        print()
         self.get_phrases()
 
         if self.isActive(sen):
