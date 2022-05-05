@@ -2,7 +2,17 @@ import nltk
 from nltk import Tree
 import spacy
 import random
-
+# io must be after verb and before do
+# io != object of prep, but they are similar. they both receive the do
+# https://www.grammarly.com/blog/indirect-object/#:~:text=In%20English%20grammar%2C%20an%20indirect,the%20ones%20who%20eat%20it.
+# active to passive formular
+# given a grammatically correct active sentence
+# it will follow the following foumula
+# sub + verb + (io) + do
+# sub + verb + do + (objp)
+# to convert to passive, we do
+# [do] is [verb] to [io] by [sub]
+# [do] is [verb] to [objp] by [sub]
 
 class test:
     def __init__(self):
@@ -140,14 +150,26 @@ class test:
             verb = root_node.text
             do = []
             # direct object
+
+            objp = []
+            # object of preposition
+            sub_word = ""
             for token in sen:
                 if token.dep_ == "dobj":
                     do.append(token.text)
+                if token.dep_ == "pobj":
+                    objp.append(token.text)
+                if token.dep_ =="nsubj":
+                    sub_word = token.text
+
+
             if len(do)==0:
                 print("This sentence cannot be converted to passive ")
                 print("missing direct object")
                 return""
             do_phrase = []
+
+            objp_phrase = []
             idx = sentence.index(verb)
             subject = sentence[:idx]
             child_list = [self.tree]
@@ -161,12 +183,76 @@ class test:
                                 self.traverse_tree(child, pos)
                                 pos.append(child.label())
                                 do_phrase.append(pos)
+                        for p in objp:
+                            if child.label() == p:
+                                pos = []
+                                self.traverse_tree(child, pos)
+                                pos.append(child.label())
+                                objp_phrase.append(pos)
 
                         child_list.append(child)
+                    else:
+                        for p in objp:
+                            if p == child:
+                                objp_phrase.append([child])
+                        for d in do:
+                            if child == d:
+                                do_phrase.append([child])
+            do_phrase = [" ".join(e) for e in do_phrase]
+            objp_phrase = [" ".join(e) for e in objp_phrase]
+            io = ""
+            verb_idx = sentence.index(verb) + len(verb) +1
+            # +1 account for space
+            do_index = 999999
+            for do in do_phrase:
+                if do in sentence:
+                    idx = sentence.index(do)
+                    if idx < do_index:
+                        do_index = idx
+            if do_index > verb_idx +1 and do_index!=999999:
+                io = sentence[verb_idx:do_index]
+            print("SUBJ")
             print(subject)
+            print("DO")
             print(do_phrase)
+            print("IO")
+            print(io)
+            print("OBJP")
+            print(objp_phrase)
 
-            return
+            # start converting to passive
+            result = ""
+            # [do] is [verb] to [io] by [sub]
+            # [do] is [verb] to [objp] by [sub]
+            # check the subject and do pronoun conjugation
+            # i did them this way to also take care of modifiers
+            if sub_word.lower() =="i":
+                subject ="me" + subject.replace(sub_word,"")
+            elif sub_word.lower() =="we":
+                subject = "us" + subject.replace(sub_word,"")
+            elif sub_word.lower() =="he":
+                subject ="him" + subject.replace(sub_word,"")
+            elif sub_word.lower() =="she":
+                subject = "her" + subject.replace(sub_word,"")
+            elif sub_word.lower() =="they":
+                subject = "them" + subject.replace(sub_word,"")
+
+            if len(do_phrase)>0:
+                do_phrase[0] = do_phrase[0].capitalize()
+            #     capitalize first letter
+            # verb conjugation
+            # https://stackoverflow.com/questions/18942096/how-to-conjugate-a-verb-in-nltk-given-pos-tag
+            if io=="" and len(objp_phrase) == 0:
+                result = " and ".join(do_phrase) + " is " + verb +" by " + subject
+            elif io!="" and len(objp_phrase) == 0:
+                result = " and ".join(do_phrase) + " is " + verb +" to " +io+" by " + subject
+            elif io=="" and len(objp_phrase) != 0:
+                result = " and ".join(do_phrase) + " is " + verb +" to " +" and ".join(objp_phrase)+" by " + subject
+            else:
+                result = " and ".join(do_phrase) + " is " + verb + " to " + io + " by " + subject + " ".join(objp_phrase)
+            result =" ".join(result.split())
+            # remove extra space
+            return result
         else:
             self.print_pos(sen)
             self.print_tree(sen)
