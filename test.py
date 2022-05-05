@@ -2,17 +2,7 @@ import nltk
 from nltk import Tree
 import spacy
 import random
-# io must be after verb and before do
-# io != object of prep, but they are similar. they both receive the do
-# https://www.grammarly.com/blog/indirect-object/#:~:text=In%20English%20grammar%2C%20an%20indirect,the%20ones%20who%20eat%20it.
-# active to passive formular
-# given a grammatically correct active sentence
-# it will follow the following foumula
-# sub + verb + (io) + do
-# sub + verb + do + (objp)
-# to convert to passive, we do
-# [do] is [verb] to [io] by [sub]
-# [do] is [verb] to [objp] by [sub]
+
 
 class test:
     def __init__(self):
@@ -85,10 +75,10 @@ class test:
         # {Word : POS}
         self.pos_dict = {}  # This assumes that there is only one instance of each word
         # {Word : Parent}
-        self.parent_dict = {} # also assumes the same
+        self.parent_dict = {}  # also assumes the same
         self.phrases = []
         self.tree = None
-    
+
     def test_ap(self):
         combined_list = self.active_sentences + self.passive_sentences
         random.shuffle(combined_list)
@@ -100,21 +90,21 @@ class test:
             sen = en_nlp(sentence)
             isActive = self.isActive(sen)
             if sentence in self.active_sentences and isActive:
-                active_correct+=1
+                active_correct += 1
                 print(sentence)
                 self.print_pos(sen)
                 # print("ACTIVE")
                 # print(sentence)
             if sentence in self.passive_sentences and not isActive:
-                passive_correct+=1
+                passive_correct += 1
                 # print("PASSIVE")
                 # print(sentence)
             elif sentence in self.passive_sentences and isActive:
                 print("Incorrect passive")
                 print(sentence)
                 self.print_pos(sen)
-        print(active_correct/ len(self.active_sentences))
-        print(passive_correct/len(self.passive_sentences))
+        print(active_correct / len(self.active_sentences))
+        print(passive_correct / len(self.passive_sentences))
 
     def test_change_voice(self):
         for sentence in self.active_sentences:
@@ -128,7 +118,7 @@ class test:
             self.pos_dict[token.text] = token.dep_
             self.parent_dict[token.text] = token.head.text
 
-    def change_voice(self,sentence):
+    def change_voice(self, sentence):
         en_nlp = spacy.load('en_core_web_sm')
         sen = en_nlp(sentence)
         self.create_pos_and_parent_dicts(sen)
@@ -160,21 +150,20 @@ class test:
                     do.append(token.text)
                 if token.dep_ == "pobj":
                     objp.append(token.text)
-                if token.dep_ =="nsubj":
+                if token.dep_ == "nsubj":
                     sub_word = token.text
 
-
-            if len(do)==0:
+            if len(do) == 0:
                 print("This sentence cannot be converted to passive ")
                 print("missing direct object")
-                return""
+                return ""
             do_phrase = []
 
             objp_phrase = []
             idx = sentence.index(verb)
             subject = sentence[:idx]
             child_list = [self.tree]
-            while len(child_list)!=0:
+            while len(child_list) != 0:
                 node = child_list.pop()
                 for child in node:
                     if isinstance(child, Tree):
@@ -202,7 +191,7 @@ class test:
             do_phrase = [" ".join(e) for e in do_phrase]
             objp_phrase = [" ".join(e) for e in objp_phrase]
             io = ""
-            verb_idx = sentence.index(verb) + len(verb) +1
+            verb_idx = sentence.index(verb) + len(verb) + 1
             # +1 account for space
             do_index = 999999
             for do in do_phrase:
@@ -210,7 +199,7 @@ class test:
                     idx = sentence.index(do)
                     if idx < do_index:
                         do_index = idx
-            if do_index > verb_idx +1 and do_index!=999999:
+            if do_index > verb_idx + 1 and do_index != 999999:
                 io = sentence[verb_idx:do_index]
             print("SUBJ")
             print(subject)
@@ -227,31 +216,32 @@ class test:
             # [do] is [verb] to [objp] by [sub]
             # check the subject and do pronoun conjugation
             # i did them this way to also take care of modifiers
-            if sub_word.lower() =="i":
-                subject ="me" + subject.replace(sub_word,"")
-            elif sub_word.lower() =="we":
-                subject = "us" + subject.replace(sub_word,"")
-            elif sub_word.lower() =="he":
-                subject ="him" + subject.replace(sub_word,"")
-            elif sub_word.lower() =="she":
-                subject = "her" + subject.replace(sub_word,"")
-            elif sub_word.lower() =="they":
-                subject = "them" + subject.replace(sub_word,"")
+            if sub_word.lower() == "i":
+                subject = "me" + subject.replace(sub_word, "")
+            elif sub_word.lower() == "we":
+                subject = "us" + subject.replace(sub_word, "")
+            elif sub_word.lower() == "he":
+                subject = "him" + subject.replace(sub_word, "")
+            elif sub_word.lower() == "she":
+                subject = "her" + subject.replace(sub_word, "")
+            elif sub_word.lower() == "they":
+                subject = "them" + subject.replace(sub_word, "")
 
-            if len(do_phrase)>0:
+            if len(do_phrase) > 0:
                 do_phrase[0] = do_phrase[0].capitalize()
             #     capitalize first letter
             # verb conjugation
             # https://stackoverflow.com/questions/18942096/how-to-conjugate-a-verb-in-nltk-given-pos-tag
-            if io=="" and len(objp_phrase) == 0:
-                result = " and ".join(do_phrase) + " is " + verb +" by " + subject
-            elif io!="" and len(objp_phrase) == 0:
-                result = " and ".join(do_phrase) + " is " + verb +" to " +io+" by " + subject
-            elif io=="" and len(objp_phrase) != 0:
-                result = " and ".join(do_phrase) + " is " + verb +" to " +" and ".join(objp_phrase)+" by " + subject
+            if io == "" and len(objp_phrase) == 0:
+                result = " and ".join(do_phrase) + " is " + verb + " by " + subject
+            elif io != "" and len(objp_phrase) == 0:
+                result = " and ".join(do_phrase) + " is " + verb + " to " + io + " by " + subject
+            elif io == "" and len(objp_phrase) != 0:
+                result = " and ".join(do_phrase) + " is " + verb + " to " + " and ".join(objp_phrase) + " by " + subject
             else:
-                result = " and ".join(do_phrase) + " is " + verb + " to " + io + " by " + subject + " ".join(objp_phrase)
-            result =" ".join(result.split())
+                result = " and ".join(do_phrase) + " is " + verb + " to " + io + " by " + subject + " ".join(
+                    objp_phrase)
+            result = " ".join(result.split())
             # remove extra space
             return result
         else:
@@ -264,7 +254,8 @@ class test:
 
             print("this is a passive sentence")
             return ""
-    def get_subtrees(self,tree,pos):
+
+    def get_subtrees(self, tree, pos):
         print(tree)
         for subtree in tree:
             if type(subtree) == nltk.tree.Tree:
@@ -286,7 +277,7 @@ class test:
                 pos.append(subtree)
         return
 
-    def traverse_tree_word(self,tree,pos, word):
+    def traverse_tree_word(self, tree, pos, word):
         for subtree in tree:
             if type(subtree) == nltk.tree.Tree and subtree.label == word:
                 self.traverse_tree(subtree, pos)
@@ -296,6 +287,7 @@ class test:
             elif isinstance(subtree, str):
                 pos.append(subtree)
         return
+
     def to_nltk_tree(self, node):
         if node.n_lefts + node.n_rights > 0:
             return Tree(node.orth_, [self.to_nltk_tree(child) for child in node.children])
@@ -338,10 +330,10 @@ class test:
     # if this function is called, the "direct object" is the io.
     def find_indirect_object_passive_no_word_phrases(self):
         # make sure there is an agent in the sentence DONT THINK WE NEED THIS
-        # found = False 
+        # found = False
         # for key, value in self.pos_dict.items():
         #     if self.pos_dict[self.parent_dict[key]] == "agent":
-        #         found = True 
+        #         found = True
         # if not found:
         #     print("No agent found")
         #     return -1
@@ -361,7 +353,8 @@ class test:
 
     def get_prep(self, word):
         for key, value in self.pos_dict.items():
-            if value != "ROOT" and self.pos_dict[self.parent_dict[word]] == "prep" or self.pos_dict[self.parent_dict[word]] == "agent":
+            if value != "ROOT" and self.pos_dict[self.parent_dict[word]] == "prep" or self.pos_dict[
+                self.parent_dict[word]] == "agent":
                 return self.parent_dict[word]
 
     def traverse_tree_dict(self, parent, attributes):
