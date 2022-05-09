@@ -2,7 +2,10 @@ import nltk
 from nltk import Tree
 import spacy
 import random
+from nltk.stem.wordnet import WordNetLemmatizer
 
+import nltk
+nltk.download('wordnet')
 
 class test:
     def __init__(self):
@@ -248,12 +251,99 @@ class test:
             self.print_pos(sen)
             self.print_tree(sen)
             io = self.find_indirect_object_word_phrases()
+            # print("IO: ", io)
             # if word phrases doesn't work
             if io == -1:
                 io = self.find_indirect_object_passive_no_word_phrases()
+                # print("IO: ",io)
 
             print("this is a passive sentence")
-            return ""
+            # print(io)
+
+            verb = root_node.text
+            do = []
+            # direct object
+
+            objp = []
+            # object of preposition
+            sub_word = ""
+
+            # adverbs
+            adv = []
+
+            for token in sen:
+                if token.dep_ == "dobj":
+                    do.append(token.text)
+                if token.dep_ == "pobj":
+                    objp.append(token.text)
+                if token.dep_ == "advmod":
+                    adv.append(token.text)
+                if token.dep_ == "nsubj":
+                    sub_word = token.text
+
+            # print(do)
+            # print(objp)
+            # print(sub_word)
+            io_phrase = io
+
+            obj = objp[-1]
+            is_plural = False
+
+            if io.lower() == "i":
+              io_phrase = 'me'
+            elif io.lower() == "we":
+              io_phrase = 'us'
+            elif io.lower() == "she":
+              io_phrase = 'her'
+            elif io.lower() == "he":
+              io_phrase = 'him'
+            elif io.lower() == "they":
+              io_phrase = 'them'
+            else:
+              for phrase in self.phrases:
+                if io == phrase[-1]:
+                    io_phrase = " ".join(phrase)
+
+
+            # get new subject phrase
+            if obj.lower() == "me":
+              subject_phrase = 'I'
+              is_plural = True
+            elif obj.lower() == "us":
+              subject_phrase = 'we'
+              is_plural = True
+            elif obj.lower() == "her":
+              subject_phrase = 'she'
+            elif obj.lower() == "him":
+              subject_phrase = 'he'
+            elif obj.lower() == "them":
+              subject_phrase = 'they'
+              is_plural = True
+            else:
+              subject_phrase = obj
+              for phrase in self.phrases:
+                  if obj == phrase[-1]:
+                      subject_phrase = " ".join(phrase[1:])
+              if subject_phrase[-1] == "s":
+                is_plural = True
+
+            # get verb phrase
+            verb_phrase = WordNetLemmatizer().lemmatize(verb,'v')
+            if adv:
+                verb_phrase = " ".join(adv) + ' ' +verb_phrase
+
+            result = ""
+
+            result += subject_phrase
+            result += ' '
+            result += verb_phrase
+            result += ' ' if is_plural else 's '
+            result += io_phrase.lower()
+
+            # Capitailize first letter
+            result = result.capitalize()
+
+            return result
 
     def get_subtrees(self, tree, pos):
         print(tree)
@@ -389,4 +479,3 @@ class test:
 
         for child in self.phrases:
             print(child)
-
