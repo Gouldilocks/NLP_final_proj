@@ -16,3 +16,4 @@ Once these dependencies are installed, please make sure that all nltk packages a
 import nltk 
 nltk.download()
 ```
+To run the code, type `python3 main.py` to execute it. 
