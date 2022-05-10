@@ -271,6 +271,9 @@ class test:
             # adverbs
             adv = []
 
+            # preposition
+            prep = []
+
             for token in sen:
                 if token.dep_ == "dobj":
                     do.append(token.text)
@@ -280,7 +283,36 @@ class test:
                     adv.append(token.text)
                 if token.dep_ == "nsubj":
                     sub_word = token.text
+                if token.dep_ == "prep":
+                    prep.append(token.text)
 
+            senlist = sentence.split()
+
+            # align phrases to sentence
+            # for t,token in enumerate(senlist):
+            #     for j, phrase in enumerate(self.phrases):
+            #         isRev = False
+            #         if phrase[0] == token:
+            #             c = 0
+            #             for p in phrase:
+            #                 try:
+            #                     if p != senlist[t+c]:
+            #                         isRev = True
+            #                     c+=1
+            #                 except:
+            #                   continue
+
+            #         if isRev:
+            #           self.phrases[j] = list(reversed(self.phrases[j]))
+
+            for j, phrase in enumerate(self.phrases):
+                for i in range (0, len(senlist)- len(phrase) + 1,1):
+                    temp = senlist[i:i+len(phrase)]
+                    # print(temp)
+                    if all(x in temp for x in phrase):
+                        self.phrases[j] = temp
+
+            # print(self.phrases)
             # print(do)
             # print(objp)
             # print(sub_word)
@@ -301,7 +333,7 @@ class test:
               io_phrase = 'them'
             else:
               for phrase in self.phrases:
-                if io == phrase[-1]:
+                if io in phrase:
                     io_phrase = " ".join(phrase)
 
 
@@ -322,7 +354,7 @@ class test:
             else:
               subject_phrase = obj
               for phrase in self.phrases:
-                  if obj == phrase[-1]:
+                  if obj in phrase:
                       subject_phrase = " ".join(phrase[1:])
               if subject_phrase[-1] == "s":
                 is_plural = True
@@ -332,13 +364,21 @@ class test:
             if adv:
                 verb_phrase = " ".join(adv) + ' ' +verb_phrase
 
-            result = ""
+            # get prep phrase
+            prep_phrase = ""
+            for p in prep:
+                for phrase in self.phrases:
+                    if p == phrase[0]:
+                        prep_phrase += " ".join(phrase)
 
+            result = ""
             result += subject_phrase
             result += ' '
             result += verb_phrase
             result += ' ' if is_plural else 's '
             result += io_phrase.lower()
+            result += ' '
+            result += prep_phrase
 
             # Capitailize first letter
             result = result.capitalize()
