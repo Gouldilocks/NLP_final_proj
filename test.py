@@ -4,9 +4,6 @@ import spacy
 import random
 from nltk.stem.wordnet import WordNetLemmatizer
 
-import nltk
-nltk.download('wordnet')
-
 class test:
     def __init__(self):
         self.active_sentences = [
@@ -130,9 +127,6 @@ class test:
         # we assume only 1 sentence
         root_node = sentence1.root
         self.tree = self.to_nltk_tree(root_node)
-        print("phrases:")
-        print("===============")
-        print()
         self.get_phrases()
 
         if self.isActive(sen):
@@ -204,14 +198,6 @@ class test:
                         do_index = idx
             if do_index > verb_idx + 1 and do_index != 999999:
                 io = sentence[verb_idx:do_index]
-            print("SUBJ")
-            print(subject)
-            print("DO")
-            print(do_phrase)
-            print("IO")
-            print(io)
-            print("OBJP")
-            print(objp_phrase)
 
             # start converting to passive
             result = ""
@@ -233,8 +219,6 @@ class test:
             if len(do_phrase) > 0:
                 do_phrase[0] = do_phrase[0].capitalize()
             #     capitalize first letter
-            # verb conjugation
-            # https://stackoverflow.com/questions/18942096/how-to-conjugate-a-verb-in-nltk-given-pos-tag
             if io == "" and len(objp_phrase) == 0:
                 result = " and ".join(do_phrase) + " is " + verb + " by " + subject
             elif io != "" and len(objp_phrase) == 0:
@@ -287,23 +271,6 @@ class test:
                     prep.append(token.text)
 
             senlist = sentence.split()
-
-            # align phrases to sentence
-            # for t,token in enumerate(senlist):
-            #     for j, phrase in enumerate(self.phrases):
-            #         isRev = False
-            #         if phrase[0] == token:
-            #             c = 0
-            #             for p in phrase:
-            #                 try:
-            #                     if p != senlist[t+c]:
-            #                         isRev = True
-            #                     c+=1
-            #                 except:
-            #                   continue
-
-            #         if isRev:
-            #           self.phrases[j] = list(reversed(self.phrases[j]))
 
             for j, phrase in enumerate(self.phrases):
                 for i in range (0, len(senlist)- len(phrase) + 1,1):
@@ -453,7 +420,7 @@ class test:
             if self.parent_dict[key] == "to" or self.parent_dict[key] == "for":
                 if self.pos_dict[self.parent_dict[key]] != "agent":
                     if value == "pobj":
-                        print("Indirect object found: ", key)
+                        # print("Indirect object found: ", key)
                         return key
         return -1
 
@@ -470,14 +437,14 @@ class test:
 
         for key, value in self.pos_dict.items():
             if self.pos_dict[key] == "nsubjpass":
-                print("Indirect object found: ", key)
+                # print("Indirect object found: ", key)
                 return key
         return -1
 
     def find_indirect_object_active(self):
         for key, value in self.pos_dict.items():
             if self.pos_dict[key] == "dative":
-                print("Indirect object found: ", key)
+                # print("Indirect object found: ", key)
                 return key
         return -1
 
@@ -517,5 +484,5 @@ class test:
                     self.phrases.append(value)
                     self.phrases[-1].extend([key])
 
-        for child in self.phrases:
-            print(child)
+        # for child in self.phrases:
+        #     print(child)
