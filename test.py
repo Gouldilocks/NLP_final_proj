@@ -6,6 +6,10 @@ from nltk.stem.wordnet import WordNetLemmatizer
 
 class test:
     def __init__(self):
+        if spacy.util.is_package('en_core_web_sm'):
+            print("en_core_web_sm is installed")
+        else:
+            spacy.cli.download('en_core_web_sm')
         self.active_sentences = [
             'I am happy.',
             'I am sad.',
@@ -353,15 +357,15 @@ class test:
             return result
 
     def get_subtrees(self, tree, pos):
-        print(tree)
+
         for subtree in tree:
             if type(subtree) == nltk.tree.Tree:
                 pos.append(subtree)
-                print("HERE")
-                print(subtree)
+
+
                 self.get_subtrees(subtree, pos)
             else:
-                print("HER2")
+
                 return
         return
 
